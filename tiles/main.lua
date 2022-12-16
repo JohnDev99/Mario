@@ -59,7 +59,7 @@ function love.load()
     topperSet = math.random(#tooperSets)
 
     --Tamanho do mapa
-    mapWidth = 20
+    mapWidth = 50
     mapHeight = 20
 
     bgRed = math.random(255) / 255
@@ -181,15 +181,37 @@ end
 function generateLevel()
     local tiles = {}
 
+
     for y = 1, mapHeight do
         table.insert(tiles, {})
         for x = 1, mapWidth do
             table.insert(tiles[y], {
-                id = y < 7 and SKY or GROUND,
-                topper = y == 7 and true or false
+                id = SKY,
+                topper = false
             })
         end
     end
 
+    for x = 1, mapWidth do
+        --Criar pilar aleatorio
+        local spawnPillar = math.random(5) == 1 --Se gerar o valor 1 na iteraçao
+        if spawnPillar then--se gerei o valor 1
+            for pillar = 4, 6 do--alem dos tiles do chao vou gerar mais dois acima
+                tiles[pillar][x] = {
+                    id = GROUND,
+                    topper = pillar == 4 and true or false--O primeiro tile do pilar reebe um topper
+                }
+            end
+        end
+
+        --Gerar o resto do chao
+        for ground = 7, mapHeight do
+            tiles[ground][x] = {
+                id = GROUND,
+                --se nao for uma coluna de pilar, for chao e o tile for na posiçao 7 gerar um topper
+                topper = (not spawnPillar and ground == 7) and true or false
+            }
+        end
+    end
     return tiles
 end
