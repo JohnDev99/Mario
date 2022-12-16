@@ -1,6 +1,8 @@
 push = require 'push'
+Class = require 'class'
 
 require 'Util'
+require 'Animation'
 
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -10,10 +12,27 @@ VIRTUAL_HEIGHT = 144
 
 TILE_SIZE = 16
 
-SKY = 2
-GROUND = 1
+SKY = 5
+GROUND = 3
 
 CAMERA_SCROLL_SPEED = 40
+
+CHARACTER_WIDTH = 16
+CHARACTER_HEIGHT = 20
+CHARACTER_MOVE_SPEED = 60
+CHARACTER_JUMP_VELOCITY = -200
+--Valor da gravidade
+GRAVITY = 7
+
+--numero de tiles em cada set
+TILE_SET_WIDTH = 5
+TILE_SET_HEIGHT = 4
+--numero de sets da imagem
+TILE_SETS_WIDE = 6
+TILE_SETS_TALL = 10
+--numero de sets topper na imagem
+TOPPER_SETS_WIDE = 6
+TOPPER_SETS_TALL = 18
 
 
 function love.load()
@@ -27,10 +46,17 @@ function love.load()
         vsync = true
     })
 
-    mapTiles = {}
-
-    tileSheet = love.graphics.newImage('tiles.png')
+    tileSheet = love.graphics.newImage('full_tiles.png')
     tileQuads = GenerateTilesQuads(tileSheet, TILE_SIZE, TILE_SIZE)
+
+    tooperSheet = love.graphics.newImage('tile_tops.png')
+    tooperQuads = GenerateTilesQuads(tooperSheet, TILE_SIZE, TILE_SIZE)
+
+    tileSets = GenerateTileSets(tileQuads, TILE_SETS_WIDE, TILE_SETS_TALL, TILE_SET_WIDTH, TILE_SET_HEIGHT)
+    tooperSets = GenerateTileSets(tooperQuads, TOPPER_SETS_WIDE, TOPPER_SETS_TALL, TILE_SET_WIDTH, TILE_SET_HEIGHT)
+
+    tileset = math.random(#tileSets)
+    topperSet = math.random(#tooperSets)
 
     --Tamanho do mapa
     mapWidth = 20
@@ -40,17 +66,35 @@ function love.load()
     bgGreen = math.random(255) / 255 
     bgBlue = math.random(255) / 255
 
-    for y = 1, mapHeight do
-        table.insert(mapTiles, {})
-        for x = 1, mapWidth do
-            table.insert(mapTiles[y], {
-                id = y < 5 and SKY or GROUND
-            })
-        end
-    end
+    --GERAR NIVEL
+    mapTiles = generateLevel()
 
     scroll = 0
-            
+           
+    characterSprite = love.graphics.newImage('character.png')
+    characterQuads = GenerateTilesQuads(characterSprite, CHARACTER_WIDTH, CHARACTER_HEIGHT)
+
+    characterX = VIRTUAL_WIDTH / 2 - (CHARACTER_WIDTH / 2)
+    characterY = ((7 - 1) * TILE_SIZE) - CHARACTER_HEIGHT
+
+    direction = 'right'
+
+    characterDy = 0
+
+    --Animaçoes do personagem
+    idleAnimation = Animation{
+        frames = {1},
+        interval = 1
+    }
+    moveAnimation = Animation{
+        frames = {10, 11},
+        interval = 0.2
+    }
+    jumpAnimation = Animation{
+        frames = {3},
+        interval = 1
+    }
+    currentAnimation = idleAnimation
 
 end
 
@@ -62,14 +106,50 @@ function love.keypressed(key)
     if key == 'escape' then
         love.event.quit()
     end
+
+    if key == 'space' and characterDy == 0 then
+        characterDy = CHARACTER_JUMP_VELOCITY
+        currentAnimation = jumpAnimation
+    end
+
+    if key == 'r' then --identalao
+        tileset = math.random(#tileSets)
+        topperSet = math.random(#tooperSets)
+    end
 end
 
 function love.update(dt)
-    if love.keyboard.isDown('left') then
-        scroll = scroll - CAMERA_SCROLL_SPEED * dt
-    elseif love.keyboard.isDown('right') then
-        scroll = scroll + CAMERA_SCROLL_SPEED * dt
+
+    --Aplicar força do salto ao personagem
+    characterDy = characterDy + GRAVITY 
+    characterY = characterY + characterDy * dt
+
+    --Colisao de forma manual
+    if characterY > (6 * TILE_SIZE) - CHARACTER_HEIGHT then
+        characterY = (6 * TILE_SIZE) - CHARACTER_HEIGHT
+        characterDy = 0
     end
+
+
+    currentAnimation:update(dt)
+
+    if love.keyboard.isDown('left') then
+        characterX = characterX - CHARACTER_MOVE_SPEED * dt
+        if characterDy == 0 then
+            currentAnimation = moveAnimation
+        end
+        direction = 'left'
+    elseif love.keyboard.isDown('right') then
+        characterX = characterX + CHARACTER_MOVE_SPEED * dt
+        if characterDy == 0 then
+            currentAnimation = moveAnimation
+        end
+        direction = 'right'
+    else
+        currentAnimation = idleAnimation
+    end
+
+    scroll = characterX - (VIRTUAL_WIDTH / 2) + (CHARACTER_WIDTH / 2)
 end
 
 function love.draw()
@@ -81,8 +161,35 @@ function love.draw()
     for y = 1, mapHeight do
         for x = 1, mapWidth do
             local singleTile = mapTiles[y][x]
-            love.graphics.draw(tileSheet, tileQuads[singleTile.id], (x - 1) * TILE_SIZE, (y - 1) * TILE_SIZE)
+            love.graphics.draw(tileSheet, tileSets[tileset][singleTile.id], (x - 1) * TILE_SIZE, (y - 1) * TILE_SIZE)
+
+            if singleTile.topper then
+                love.graphics.draw(tooperSheet, tooperSets[topperSet][singleTile.id], (x - 1) * TILE_SIZE, (y - 1) * TILE_SIZE)
+            end
+            
         end
     end
+
+    --Desenhar personagem
+    love.graphics.draw(characterSprite, characterQuads[currentAnimation:getCurrentFrame()],
+     math.floor(characterX) + CHARACTER_WIDTH / 2, math.floor(characterY) + CHARACTER_HEIGHT / 2,
+     0, direction == 'left' and -1 or 1, 1, CHARACTER_WIDTH / 2, CHARACTER_HEIGHT / 2)
+
     push:finish()
+end
+
+function generateLevel()
+    local tiles = {}
+
+    for y = 1, mapHeight do
+        table.insert(tiles, {})
+        for x = 1, mapWidth do
+            table.insert(tiles[y], {
+                id = y < 7 and SKY or GROUND,
+                topper = y == 7 and true or false
+            })
+        end
+    end
+
+    return tiles
 end
