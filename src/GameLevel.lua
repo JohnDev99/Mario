@@ -1,6 +1,6 @@
 GameLevel = Class{}
 
-function GameLevel(entities, objects, tilemap)
+function GameLevel:init(entities, objects, tilemap)
     self.entities = entities
     self.objects = objects
     self.tilemap = tilemap

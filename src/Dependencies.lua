@@ -1,9 +1,33 @@
 push = require 'lib/push'
 Class = require 'lib/class'
+Timer = require 'lib/knife.timer'
 
 require 'src/Animation'
 require 'src/Util'
 require 'src/constants'
+require 'src/Entity'
+require 'src/GameLevel'
+require 'src/GameObject'
+require 'src/LevelMaker'
+require 'src/Player'
+require 'src/Snail'
+require 'src/StateMachine'
+require 'src/Tile'
+require 'src/Tilemap'
+
+--Estados
+require 'src/states/BaseState'
+require 'src/states/game/PlayState'
+require 'src/states/game/StartState'
+--Player
+require 'src/states/entity/PlayerFallingState'
+require 'src/states/entity/PlayerIdleState'
+require 'src/states/entity/PlayerJumpState'
+require 'src/states/entity/PlayerWalkState'
+--Snail
+require 'src/states/entity/snail/SnailChasingState'
+require 'src/states/entity/snail/SnailIdleState'
+require 'src/states/entity/snail/SnailMovingState'
 
 gTextures = {
     ['tiles'] = love.graphics.newImage('graphics/tiles.png'),
@@ -12,7 +36,7 @@ gTextures = {
     ['jump-blocks'] = love.graphics.newImage('graphics/jump_blocks.png'),
     ['gems'] = love.graphics.newImage('graphics/gems.png'),
     ['backgrounds'] = love.graphics.newImage('graphics/backgrounds.png'),
-    ['green-alien'] = love.graphics.newImage('graphics/green-alien.png'),
+    ['green-alien'] = love.graphics.newImage('graphics/green_alien.png'),
     ['creatures'] = love.graphics.newImage('graphics/creatures.png')
 }
 

@@ -24,7 +24,7 @@ function PlayerJumpState:update(dt)
     self.player.y = self.player.y + (self.player.dy * dt)
 
     --Mudar para o estado de queda quando atingir o maximo de altura
-    id self.player.dy >= 0 then
+    if self.player.dy >= 0 then
         self.player:changeState('falling')
     end
 

@@ -46,7 +46,7 @@ function LevelMaker.generate(width, height)
                     table.insert(objects, GameObject{
                         texture = 'bushes',
                         x = (x - 1) * TILE_SIZE,
-                        y = (y - 4) * TILE_SIZE,
+                        y = (4 - 1) * TILE_SIZE,
                         width = 16, height = 16,
                         --Variedade na escolha de arbustos
                         frame = BUSH_IDS[math.random(#BUSH_IDS)] + (math.random(4) - 1) * 7,
@@ -61,7 +61,7 @@ function LevelMaker.generate(width, height)
 
                 --Chance de gerar arbustos no res do chao
             elseif math.random(8) == 1 then
-                table.insert(object, GameObject{
+                table.insert(objects, GameObject{
                     texture = 'bushes',
                     x = (x - 1) * TILE_SIZE,
                     y = (6 - 1) * TILE_SIZE,
